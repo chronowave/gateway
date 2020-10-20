@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  labels:
+    {{- include "k8s.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "k8s.selectorLabels" . | nindent 6 }}
+      component: standalone-collector
+  template:
+    metadata:
+      labels:
+        {{- include "k8s.selectorLabels" . | nindent 8 }}
+        component: standalone-collector
+    spec:
+      containers:
+        - name: otel-collector
+          command:
+            - /otelcol
+            - --config=/conf/relay.yaml
+            - --metrics-addr=0.0.0.0:8888
+            - --log-level=DEBUG
+          image: "{{ .Values.otel.image.repository }}:{{ .Values.otel.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.otel.image.pullPolicy }}
+          ports:
+            {{- range $key, $port := .Values.otel.ports }}
+            - name: {{ $key }}
+              containerPort: {{ $port.containerPort }}
+              protocol: {{ $port.protocol }}
+            {{- end }}
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+          volumeMounts:
+            - mountPath: /conf
+              name: otel-configmap
+      volumes:
+        - name: otel-configmap
+          configMap:
+            name: otel-collector
+            items:
+              - key: relay
+                path: relay.yaml

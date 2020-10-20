@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector
+  labels:
+    {{- include "k8s.labels" . | nindent 4 }}
+data:
+  relay: |
+    extensions:
+      health_check:
+      pprof:
+        endpoint: 0.0.0.0:1777
+      zpages:
+        endpoint: 0.0.0.0:55679
+    
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:55672
+            transport: tcp
+          http:
+            endpoint: 0.0.0.0:55671
+    
+      opencensus:
+    
+      # Collect own metrics
+      prometheus:
+        config:
+          scrape_configs:
+          - job_name: 'otel-collector'
+            scrape_interval: 10s
+            static_configs:
+            - targets: ['0.0.0.0:8888']
+    
+      jaeger:
+        protocols:
+          grpc:
+          thrift_binary:
+          thrift_compact:
+          thrift_http:
+    
+      zipkin:
+    
+    processors:
+      batch:
+    
+    exporters:
+      logging:
+        logLevel: debug
+      jaeger:
+        endpoint: jaeger:14250
+        insecure: true
+    
+    service:
+    
+      pipelines:
+    
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [jaeger]
+    
+        metrics:
+          receivers: [otlp, opencensus]
+          processors: [batch]
+          exporters: [logging]
+    
+      extensions: [health_check, pprof, zpages]

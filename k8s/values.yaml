@@ -1,0 +1,142 @@
+# Default values for k8s.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: chronowave/jaeger-all-in-one
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: latest
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+gateway:
+  image:
+    repository: chronowave/gateway
+    pullPolicy: IfNotPresent
+    tag: latest
+  service:
+    type: ClusterIP
+    port: 8999
+
+hotrod:
+  podSecurityContext: {}
+  securityContext: {}
+  replicaCount: 1
+  image:
+    repository: chronowave/jaeger-hotrod
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+    tag: latest
+  service:
+    annotations: {}
+    name: hotrod
+    type: ClusterIP
+    # List of IP ranges that are allowed to access the load balancer (if supported)
+    loadBalancerSourceRanges: []
+    port: 80
+  ingress:
+    enabled: true
+    # Used to create Ingress record (should be used with service.type: ClusterIP).
+    hosts:
+      - host: hotrod.local
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      ingress.kubernetes.io/rewrite-target: /$1
+    tls:
+      # Secrets must be manually created in the namespace.
+      # - secretName: chart-example-tls
+      #   hosts:
+      #     - chart-example.local
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  serviceAccount:
+    create: false
+    name:
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  tracing:
+    host: jaeger
+    port: 6831
+
+otel:
+  image:
+    repository: otel/opentelemetry-collector
+    pullPolicy: IfNotPresent
+    tag: latest
+  service:
+    type: ClusterIP
+  ports:
+    otlp:
+      containerPort: 55671
+      servicePort: 55671
+      protocol: TCP
+    opencensus:
+      containerPort: 55678
+      servicePort: 55678
+      protocol: TCP

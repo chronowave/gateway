@@ -1,0 +1,47 @@
+{{- if .Values.hotrod.ingress.enabled -}}
+{{- $hotrodPort := .Values.hotrod.service.port -}}
+{{- $gatewayPort := .Values.gateway.service.port -}}
+{{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1beta1
+{{- else -}}
+apiVersion: extensions/v1beta1
+{{- end }}
+kind: Ingress
+metadata:
+  name: hotrod
+  labels:
+    {{- include "k8s.labels" . | nindent 4 }}
+  {{- with .Values.hotrod.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.hotrod.ingress.tls }}
+  tls:
+    {{- range .Values.hotrod.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.hotrod.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: hotrod
+              servicePort: {{ $hotrodPort }}
+          - path: /main.js
+            backend:
+              serviceName: gateway
+              servicePort: {{ $gatewayPort }}
+          - path: /ws
+            backend:
+              serviceName: gateway
+              servicePort: {{ $gatewayPort }}
+    {{- end }}
+  {{- end }}

@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist/",
+        "noImplicitAny": true,
+        "module": "esnext",
+        "allowJs": false,
+        "jsx": "react",
+        "allowUnreachableCode": false,
+        "allowUnusedLabels": false,
+        "declaration": true,
+        "declarationMap": true,
+        "forceConsistentCasingInFileNames": true,
+        "noEmitOnError": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "moduleResolution": "node",
+        "noUnusedLocals": true,
+        "pretty": true,
+        "sourceMap": true,
+        "strict": true,
+        "strictNullChecks": true,
+        "target": "es2017",
+        "incremental": true,
+        "newLine": "LF"
+    },
+    "include": [
+        "src/**/*.tsx",
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

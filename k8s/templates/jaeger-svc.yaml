@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  labels:
+    {{- include "k8s.labels" . | nindent 4 }}
+    app.kubernetes.io/component: jaeger
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: 5775
+      targetPort: 5775
+      protocol: UDP
+      name: p5775
+    - port: 6831
+      targetPort: 6831
+      protocol: UDP
+      name: p6831
+    - port: 6832
+      targetPort: 6832
+      protocol: UDP
+      name: p6832
+    - port: 5778
+      targetPort: 5778
+      protocol: TCP
+      name: p5778
+    - port: 16686
+      targetPort: 16686
+      protocol: TCP
+      name: p16686
+    - port: 14268
+      targetPort: 14268
+      protocol: TCP
+      name: p14268
+    - port: 14250
+      targetPort: 14250
+      protocol: TCP
+      name: p14250
+    - port: 9411
+      targetPort: 9411
+      protocol: TCP
+      name: p9411
+    - port: 9668
+      targetPort: 9668
+      protocol: TCP      
+      name: p9668
+  selector:
+    {{- include "k8s.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: jaeger
